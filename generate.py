@@ -311,6 +311,23 @@ def _parse_args():
         nargs='+',
         default=None,
         help="Timestamps of the middle images, e.g. 0.1 0.2 0.3")
+    
+    parser.add_argument(
+        "--high_noise_lora_weights_path",
+        type=str,
+        default=None,
+        help="Path to the high noise LoRA weights file, e.g. safetensors")
+    parser.add_argument(
+        "--lora_rank",
+        type=int,
+        default=32,
+        help="The rank of the LoRA weights")
+    parser.add_argument(
+        "--lora_alpha",
+        type=int,
+        default=16,
+        help="The alpha of the LoRA weights")
+    
     args = parser.parse_args()
     _validate_args(args)
 
@@ -553,6 +570,8 @@ def generate(args):
             use_sp=(args.ulysses_size > 1),
             t5_cpu=args.t5_cpu,
             convert_model_dtype=args.convert_model_dtype,
+            high_noise_lora_weights_path=args.high_noise_lora_weights_path,
+
         )
         logging.info("Generating video ...")
         video = wan_i2v.generate(

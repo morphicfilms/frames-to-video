@@ -15,7 +15,8 @@ import torch.cuda.amp as amp
 import torch.distributed as dist
 import torchvision.transforms.functional as TF
 from tqdm import tqdm
-
+from peft import LoraConfig
+from peft import inject_adapter_in_model
 from .distributed.fsdp import shard_model
 from .distributed.sequence_parallel import sp_attn_forward, sp_dit_forward
 from .distributed.util import get_world_size
@@ -29,6 +30,36 @@ from .utils.fm_solvers import (
 )
 from .utils.fm_solvers_unipc import FlowUniPCMultistepScheduler
 
+def load_lora_weights_from_safetensors(lora_path):
+    """
+    Load LoRA weights from safetensors file and rename keys from ".weight" to ".default.weight".
+
+    Args:
+        lora_path (str): Path to the LoRA weights safetensors file
+
+    Returns:
+        dict: Modified state dictionary with renamed keys
+
+    Raises:
+        FileNotFoundError: If the lora_path does not exist
+    """
+    if not os.path.exists(lora_path):
+        raise FileNotFoundError(f"LoRA weights file not found: {lora_path}")
+    from safetensors.torch import load_file as safetensors_load_file
+    # Load the entire state_dict
+    lora_weights = safetensors_load_file(lora_path)
+
+    # For each key: rename ".weight" with ".default.weight"
+    # Save memory by modifying state_dict in-place instead of creating a new dict
+    keys_to_modify = [
+        k for k in lora_weights if (k.endswith(".weight") and "lora" in k)
+    ]
+    for k in keys_to_modify:
+        v = lora_weights.pop(k)
+        new_k = k[: -len(".weight")] + ".default.weight"
+        lora_weights[new_k] = v
+
+    return lora_weights
 
 class WanI2V:
 
@@ -44,6 +75,9 @@ class WanI2V:
         t5_cpu=False,
         init_on_cpu=True,
         convert_model_dtype=False,
+        high_noise_lora_weights_path=None,
+        lora_rank=32,
+        lora_alpha=16,
     ):
         r"""
         Initializes the image-to-video generation model components.
@@ -102,7 +136,7 @@ class WanI2V:
 
         logging.info(f"Creating WanModel from {checkpoint_dir}")
         self.low_noise_model = WanModel.from_pretrained(
-            checkpoint_dir, subfolder="low_noise_interpolation")
+            checkpoint_dir, subfolder="low_noise_model")
         self.low_noise_model = self._configure_model(
             model=self.low_noise_model,
             use_sp=use_sp,
@@ -111,7 +145,37 @@ class WanI2V:
             convert_model_dtype=convert_model_dtype)
 
         self.high_noise_model = WanModel.from_pretrained(
-            checkpoint_dir, subfolder="high_noise_interpolation")
+            checkpoint_dir, subfolder="high_noise_model")
+        
+        print("high_noise_lora_weights_path: ", high_noise_lora_weights_path)
+        
+        if high_noise_lora_weights_path:
+            logging.info(f"Loading LoRA weights from {high_noise_lora_weights_path}")
+            transformer_lora_config = LoraConfig(
+                r=lora_rank,
+                lora_alpha=lora_alpha,
+                init_lora_weights=True,
+                target_modules=["k", "q", "v", "o"],
+            )
+            self.high_noise_model = inject_adapter_in_model(
+                transformer_lora_config, self.high_noise_model
+            )
+
+            lora_weights = load_lora_weights_from_safetensors(
+                high_noise_lora_weights_path
+            )
+            missing_keys, unexpected_keys = self.high_noise_model.load_state_dict(
+                state_dict=lora_weights,
+                strict=False,
+            )
+            if rank == 0:
+                logging.info(f"Unused weights: {len(unexpected_keys)}")
+            if unexpected_keys:
+                if rank == 0:
+                    logging.info(
+                        f"Unexpected keys: {unexpected_keys[:10]}..."
+                    )  # Show first 10
+        
         self.high_noise_model = self._configure_model(
             model=self.high_noise_model,
             use_sp=use_sp,

@@ -1,10 +1,40 @@
 # Wan2.2 based Transitions and Multi-frame Interpolation
 
-To doenload the weights :
+## Showcase
+
+| Video | Input Images & Prompt |
+|-------|----------------------|
+| <video src="examples/i2v-A14B_1280*720_8_Aa_clown,_slowly_transforms_into_a_poster._20251022_231821.mp4" controls width="640"></video> | <img src="examples/transition9_1.png" width="200"> → <img src="examples/transition9_2.png" width="200"><br><br>**Prompt:** "A clown, slowly transforms into a poster."<br><br>**Type:** Two-frame transition |
+| <video src="examples/i2v-A14B_1280*720_8_The_animated_girl_rises_up_from_her_chair_and_wave_20251022_233745.mp4" controls width="640"></video> | <img src="examples/pink_1.png" width="150"> → <img src="examples/pink_2.png" width="150"> → <img src="examples/pink_3.png" width="150"> → <img src="examples/pink_4.png" width="150"><br><br>**Prompt:** "The animated girl rises up from her chair and waves hi to the camera as the camera zooms in."<br><br>**Type:** Multi-frame interpolation |
+
+
+## Setting up the repository
+
+First clone the Morphic Interpolation repo:
 
 ```
-huggingface-cli download Morphic/Wan2.2-I2V-A14B-Intepolation --local-dir ./Wan2.2-I2V-A14B-Interpolation
+git clone https://github.com/morphicfilms/MorphicFrames2Video.git
 ```
+
+To install the environment, we recommend following the [Wan2.2 installation guide](https://github.com/Wan-Video/Wan2.2).
+
+Or you could alternatively run : `bash setup_env.sh` -> we recommend using the flash-attn version listed in the bash file for hassle free install.
+
+## Downloading the weights
+
+First:  download Wan2.2 I2V weights:
+
+```
+huggingface-cli download Wan-AI/Wan2.2-I2V-A14B --local-dir ./Wan2.2-I2V-A14B
+```
+
+Second : download the Morphic Frames to Video lora weights :
+
+```
+huggingface-cli download morphicmlteam/Wan2.2-I2V-A14B-frames --local-dir ./morphic-frames-lora-weights
+```
+
+## Running Frames to Video
 
 For multi node run for 2 frame interpolation : 
 
@@ -14,6 +44,7 @@ torchrun --nproc_per_node=8 generate.py \
     --size 1280*720 \
     --frame_num 81 \
     --ckpt_dir ./Wan2.2-I2V-A14B-Interpolation \
+    --high_noise_lora_weights_path ./morphic-frames-lora-weights/lora_interpolation_high_noise_final.safetensors \
     --dit_fsdp \
     --t5_fsdp \
     --ulysses_size 8 \
@@ -29,6 +60,7 @@ torchrun --nproc_per_node=8 generate.py \
     --size 1280*720 \
     --frame_num 81 \
     --ckpt_dir ./Wan2.2-I2V-A14B-Interpolation \
+    --high_noise_lora_weights_path ./morphic-frames-lora-weights/lora_interpolation_high_noise_final.safetensors \
     --dit_fsdp \
     --t5_fsdp \
     --ulysses_size 8 \

@@ -9,6 +9,7 @@ torchrun --nproc_per_node=8 generate.py \
     --size 1280*720 \
     --frame_num 81 \
     --ckpt_dir /data/adi_temp/MorphicVideo/Wan2.2-I2V-A14B \
+    --high_noise_lora_weights_path lora_interpolation_high_noise_final.safetensors \
     --dit_fsdp \
     --t5_fsdp \
     --ulysses_size 8 \
@@ -17,12 +18,14 @@ torchrun --nproc_per_node=8 generate.py \
     --img_end examples/transition9_2.png \
 
 
+
 # multi-frame interpolation / transition
 torchrun --nproc_per_node=8 generate.py \
     --task i2v-A14B \
     --size 1280*720 \
     --frame_num 81 \
     --ckpt_dir /data/adi_temp/MorphicVideo/Wan2.2-I2V-A14B \
+    --high_noise_lora_weights_path lora_interpolation_high_noise_final.safetensors \
     --dit_fsdp \
     --t5_fsdp \
     --ulysses_size 8 \
