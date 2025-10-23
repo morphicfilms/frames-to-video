@@ -294,6 +294,40 @@ def _parse_args():
         default=80,
         help="Number of frames per clip, 48 or 80 or others (must be multiple of 4) for 14B s2v"
     )
+    parser.add_argument(
+        "--img_end",
+        type=str,
+        default=None,
+        help="Path to the image end file, e.g. jpg, png")
+    parser.add_argument(
+        "--middle_images",
+        type=str,
+        nargs='+',
+        default=None,
+        help="List of paths to middle images files, e.g. jpg, png")
+    parser.add_argument(
+        "--middle_images_timestamps",
+        type=float,
+        nargs='+',
+        default=None,
+        help="Timestamps of the middle images, e.g. 0.1 0.2 0.3")
+    
+    parser.add_argument(
+        "--high_noise_lora_weights_path",
+        type=str,
+        default=None,
+        help="Path to the high noise LoRA weights file, e.g. safetensors")
+    parser.add_argument(
+        "--lora_rank",
+        type=int,
+        default=32,
+        help="The rank of the LoRA weights")
+    parser.add_argument(
+        "--lora_alpha",
+        type=int,
+        default=16,
+        help="The alpha of the LoRA weights")
+    
     args = parser.parse_args()
     _validate_args(args)
 
@@ -375,7 +409,18 @@ def generate(args):
     if args.image is not None:
         img = Image.open(args.image).convert("RGB")
         logging.info(f"Input image: {args.image}")
-
+    img_end = None
+    if args.img_end is not None:
+        img_end = Image.open(args.img_end).convert("RGB")
+        logging.info(f"Input image end: {args.img_end}")
+        
+    middle_images = None
+    middle_images_timestamps = None
+    if args.middle_images is not None:
+        assert len(args.middle_images) == len(args.middle_images_timestamps), f"middle_images and middle_images_timestamps must have equal length, got {len(args.middle_images)} and {len(args.middle_images_timestamps)}"
+        middle_images = [Image.open(image).convert("RGB") for image in args.middle_images]
+        logging.info(f"Input middle images: {args.middle_images}")
+        middle_images_timestamps = args.middle_images_timestamps
     # prompt extend
     if args.use_prompt_extend:
         logging.info("Extending prompt ...")
@@ -525,6 +570,8 @@ def generate(args):
             use_sp=(args.ulysses_size > 1),
             t5_cpu=args.t5_cpu,
             convert_model_dtype=args.convert_model_dtype,
+            high_noise_lora_weights_path=args.high_noise_lora_weights_path,
+
         )
         logging.info("Generating video ...")
         video = wan_i2v.generate(
@@ -537,7 +584,11 @@ def generate(args):
             sampling_steps=args.sample_steps,
             guide_scale=args.sample_guide_scale,
             seed=args.base_seed,
-            offload_model=args.offload_model)
+            offload_model=args.offload_model,
+            img_end=img_end,
+            middle_images=middle_images,
+            middle_images_timestamps=middle_images_timestamps,
+            )
 
     if rank == 0:
         if args.save_file is None:

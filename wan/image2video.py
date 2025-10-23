@@ -15,7 +15,8 @@ import torch.cuda.amp as amp
 import torch.distributed as dist
 import torchvision.transforms.functional as TF
 from tqdm import tqdm
-
+from peft import LoraConfig
+from peft import inject_adapter_in_model
 from .distributed.fsdp import shard_model
 from .distributed.sequence_parallel import sp_attn_forward, sp_dit_forward
 from .distributed.util import get_world_size
@@ -29,6 +30,36 @@ from .utils.fm_solvers import (
 )
 from .utils.fm_solvers_unipc import FlowUniPCMultistepScheduler
 
+def load_lora_weights_from_safetensors(lora_path):
+    """
+    Load LoRA weights from safetensors file and rename keys from ".weight" to ".default.weight".
+
+    Args:
+        lora_path (str): Path to the LoRA weights safetensors file
+
+    Returns:
+        dict: Modified state dictionary with renamed keys
+
+    Raises:
+        FileNotFoundError: If the lora_path does not exist
+    """
+    if not os.path.exists(lora_path):
+        raise FileNotFoundError(f"LoRA weights file not found: {lora_path}")
+    from safetensors.torch import load_file as safetensors_load_file
+    # Load the entire state_dict
+    lora_weights = safetensors_load_file(lora_path)
+
+    # For each key: rename ".weight" with ".default.weight"
+    # Save memory by modifying state_dict in-place instead of creating a new dict
+    keys_to_modify = [
+        k for k in lora_weights if (k.endswith(".weight") and "lora" in k)
+    ]
+    for k in keys_to_modify:
+        v = lora_weights.pop(k)
+        new_k = k[: -len(".weight")] + ".default.weight"
+        lora_weights[new_k] = v
+
+    return lora_weights
 
 class WanI2V:
 
@@ -44,6 +75,9 @@ class WanI2V:
         t5_cpu=False,
         init_on_cpu=True,
         convert_model_dtype=False,
+        high_noise_lora_weights_path=None,
+        lora_rank=32,
+        lora_alpha=16,
     ):
         r"""
         Initializes the image-to-video generation model components.
@@ -102,7 +136,7 @@ class WanI2V:
 
         logging.info(f"Creating WanModel from {checkpoint_dir}")
         self.low_noise_model = WanModel.from_pretrained(
-            checkpoint_dir, subfolder=config.low_noise_checkpoint)
+            checkpoint_dir, subfolder="low_noise_model")
         self.low_noise_model = self._configure_model(
             model=self.low_noise_model,
             use_sp=use_sp,
@@ -111,7 +145,37 @@ class WanI2V:
             convert_model_dtype=convert_model_dtype)
 
         self.high_noise_model = WanModel.from_pretrained(
-            checkpoint_dir, subfolder=config.high_noise_checkpoint)
+            checkpoint_dir, subfolder="high_noise_model")
+        
+        print("high_noise_lora_weights_path: ", high_noise_lora_weights_path)
+        
+        if high_noise_lora_weights_path:
+            logging.info(f"Loading LoRA weights from {high_noise_lora_weights_path}")
+            transformer_lora_config = LoraConfig(
+                r=lora_rank,
+                lora_alpha=lora_alpha,
+                init_lora_weights=True,
+                target_modules=["k", "q", "v", "o"],
+            )
+            self.high_noise_model = inject_adapter_in_model(
+                transformer_lora_config, self.high_noise_model
+            )
+
+            lora_weights = load_lora_weights_from_safetensors(
+                high_noise_lora_weights_path
+            )
+            missing_keys, unexpected_keys = self.high_noise_model.load_state_dict(
+                state_dict=lora_weights,
+                strict=False,
+            )
+            if rank == 0:
+                logging.info(f"Unused weights: {len(unexpected_keys)}")
+            if unexpected_keys:
+                if rank == 0:
+                    logging.info(
+                        f"Unexpected keys: {unexpected_keys[:10]}..."
+                    )  # Show first 10
+        
         self.high_noise_model = self._configure_model(
             model=self.high_noise_model,
             use_sp=use_sp,
@@ -214,7 +278,11 @@ class WanI2V:
                  guide_scale=5.0,
                  n_prompt="",
                  seed=-1,
-                 offload_model=True):
+                 offload_model=True,
+                 img_end=None,
+                 middle_images=None,
+                 middle_images_timestamps=None,
+                 ):
         r"""
         Generates video frames from input image and text prompt using diffusion process.
 
@@ -253,10 +321,24 @@ class WanI2V:
                 - H: Frame height (from max_area)
                 - W: Frame width from max_area)
         """
+        
+        assert middle_images is None or img_end is not None, (
+            "img_end is required if middle_images is not None"
+        )
+        
         # preprocess
         guide_scale = (guide_scale, guide_scale) if isinstance(
             guide_scale, float) else guide_scale
         img = TF.to_tensor(img).sub_(0.5).div_(0.5).to(self.device)
+        
+        if img_end is not None:
+            img_end = TF.to_tensor(img_end).sub_(0.5).div_(0.5).to(self.device)
+        middle_image_tensors = []
+        if middle_images is not None:
+            for middle_image in middle_images:
+                middle_image_tensors.append(
+                    TF.to_tensor(middle_image).sub_(0.5).div_(0.5).to(self.device)
+                )
 
         F = frame_num
         h, w = img.shape[1:]
@@ -286,14 +368,23 @@ class WanI2V:
             generator=seed_g,
             device=self.device)
 
-        msk = torch.ones(1, F, lat_h, lat_w, device=self.device)
-        msk[:, 1:] = 0
-        msk = torch.concat([
-            torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]
-        ],
-                           dim=1)
-        msk = msk.view(1, msk.shape[1] // 4, 4, lat_h, lat_w)
-        msk = msk.transpose(1, 2)[0]
+        if img is not None:
+            msk = torch.zeros(1, F, lat_h, lat_w, device=self.device)
+            msk[:, 0] = 1  # Set first frame to 1
+
+            if img_end is not None:
+                msk[:, -1] = 1
+            if middle_images is not None:
+                for i in range(len(middle_images)):
+                    frame_to_mask = int(middle_images_timestamps[i] * F) // 4 * 4
+                    msk[:, frame_to_mask] = 1
+
+            msk = torch.concat(
+                [torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]],
+                dim=1,
+            )
+            msk = msk.view(1, msk.shape[1] // 4, 4, lat_h, lat_w)
+            msk = msk.transpose(1, 2)[0]
 
         if n_prompt == "":
             n_prompt = self.sample_neg_prompt
@@ -311,17 +402,46 @@ class WanI2V:
             context = [t.to(self.device) for t in context]
             context_null = [t.to(self.device) for t in context_null]
 
-        y = self.vae.encode([
-            torch.concat([
-                torch.nn.functional.interpolate(
-                    img[None].cpu(), size=(h, w), mode='bicubic').transpose(
-                        0, 1),
-                torch.zeros(3, F - 1, h, w)
-            ],
-                         dim=1).to(self.device)
-        ])[0]
-        y = torch.concat([msk, y])
 
+        reference_video_tensor = torch.concat(
+            [
+                torch.nn.functional.interpolate(
+                    img[None].cpu(), size=(h, w), mode="bicubic"
+                ).transpose(0, 1),
+                torch.zeros(3, F - 1, h, w),
+            ],
+            dim=1,
+        ).to(self.device)
+
+        if img_end is not None:
+            zeros_tensor = reference_video_tensor.clone()
+            if img_end is not None:
+                zeros_tensor[:, -1, :, :] = (
+                    torch.nn.functional.interpolate(
+                        img_end[None].cpu(), size=(h, w), mode="bicubic"
+                    )
+                    .transpose(0, 1)
+                    .squeeze(0)
+                ).squeeze(1)
+
+            if middle_images is not None:
+                for i in range(len(middle_images)):
+                    frame_to_mask = int(middle_images_timestamps[i] * F) // 4 * 4
+                    zeros_tensor[:, frame_to_mask, :, :] = (
+                        torch.nn.functional.interpolate(
+                            middle_image_tensors[i][None].cpu(),
+                            size=(h, w),
+                            mode="bicubic",
+                        )
+                        .transpose(0, 1)
+                        .squeeze(0)
+                    ).squeeze(1)
+            zeros_tensor = zeros_tensor.to(self.device)
+            y_interp = self.vae.encode([zeros_tensor])[0]
+
+        if y_interp is not None:
+            y_interp = torch.concat([msk, y_interp])
+        
         @contextmanager
         def noop_no_sync():
             yield
@@ -367,13 +487,13 @@ class WanI2V:
             arg_c = {
                 'context': [context[0]],
                 'seq_len': max_seq_len,
-                'y': [y],
+                'y': [y_interp],
             }
 
             arg_null = {
                 'context': context_null,
                 'seq_len': max_seq_len,
-                'y': [y],
+                'y': [y_interp],
             }
 
             if offload_model:
