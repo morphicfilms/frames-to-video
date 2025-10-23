@@ -1,9 +1,7 @@
-# Wan2.2 based Transitions and Multi-frame Interpolation
+# Wan2.2 based Transitions and Frames-2-video
 
-# Wan2.2 based Transitions and Multi-frame Interpolation
 
-by [Morphic](https://www.morphic.com)
-
+by [Morphic](https://www.morphic.com) | [![GitHub](https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github)](https://github.com/morphicfilms/MorphicFrames2Video.git) | Weights: [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue)](https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames)
 
 ## Showcase
 
