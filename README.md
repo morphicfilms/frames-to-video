@@ -1,5 +1,10 @@
 # Wan2.2 based Transitions and Multi-frame Interpolation
 
+# Wan2.2 based Transitions and Multi-frame Interpolation
+
+by [Morphic](https://www.morphic.com)
+
+
 ## Showcase
 
 | Video | Input Images & Prompt |
@@ -75,3 +80,10 @@ Note:
 1. --middle_images_timestamps : should be used if multiple intermediate frames are provided, the numbers indicate the the location the intermediate frame is provided (0.5 -> midway, 0.33, 0.66 -> 2 equally spaced intermediate frames, 0.25, 0.5, 0.75 -> 3 equally spaced intermediate frames)
 2. Number of middle_images must be equal to number of middle_images_timestamps
 
+## Acknowledgements
+
+We would like to thank the Wan2.2 repo authors for the important research and open weights: [Wan2.2](https://github.com/Wan-Video/Wan2.2)
+
+## Contact us 
+
+You can reach out to us via : adithya.iyer@morphic.com
