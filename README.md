@@ -22,8 +22,8 @@
 
 | Video | Input Images & Prompt |
 |-------|----------------------|
-| <video src="examples/i2v-A14B_1280*720_8_Aa_clown,_slowly_transforms_into_a_poster._20251022_231821.mp4" controls width="640"></video> | <img src="examples/transition9_1.png" width="200"> → <img src="examples/transition9_2.png" width="200"><br><br>**Prompt:** "A clown, slowly transforms into a poster."<br><br>**Type:** Two-frame transition |
-| <video src="examples/i2v-A14B_1280*720_8_The_animated_girl_rises_up_from_her_chair_and_wave_20251022_233745.mp4" controls width="640"></video> | <img src="examples/pink_1.png" width="150"> → <img src="examples/pink_2.png" width="150"> → <img src="examples/pink_3.png" width="150"> → <img src="examples/pink_4.png" width="150"><br><br>**Prompt:** "The animated girl rises up from her chair and waves hi to the camera as the camera zooms in."<br><br>**Type:** Multi-frame interpolation |
+| <video src="https://external-cdn.morphic.com/assets-production/0193449d-bd5f-7034-a819-90186076c7d4/0[…]e0-30530497e5a8/019a28d7-e3d0-7ea3-93cf-92dbfc464b93.mp4" controls width="640"></video> | <img src="examples/transition9_1.png" width="200"> → <img src="examples/transition9_2.png" width="200"><br><br>**Prompt:** "A clown, slowly transforms into a poster."<br><br>**Type:** Two-frame transition |
+| <video src="https://external-cdn.morphic.com/assets-production/0193449d-bd5f-7034-a819-90186076c7d4/0191fef9-bf7e-7ddf-b6b1-20cacfb7f121/019a28d7-e372-71f2-bde4-1ad6144c475f/019a28d7-e3cd-7060-9f39-3fa030dcd020.mp4" controls width="640"></video> | <img src="examples/pink_1.png" width="150"> → <img src="examples/pink_2.png" width="150"> → <img src="examples/pink_3.png" width="150"> → <img src="examples/pink_4.png" width="150"><br><br>**Prompt:** "The animated girl rises up from her chair and waves hi to the camera as the camera zooms in."<br><br>**Type:** Multi-frame interpolation |
 
 
 ## Setting up the repository
