@@ -1,13 +1,23 @@
-# Wan2.2 based Transitions and Frames-2-video
+<div align="center">
 
+# 🎬 Morphic Frames to Video
 
-by [Morphic](https://www.morphic.com) | [![GitHub](https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github)](https://github.com/morphicfilms/MorphicFrames2Video.git) | Weights: [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue)](https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames)
+### High-quality video generation from image frames using Wan2.2
 
-[![GitHub](https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github)](https://github.com/morphicfilms/MorphicFrames2Video.git)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue)](https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames)
-[![Website](https://img.shields.io/badge/Website-morphic.com-purple)](https://www.morphic.com)
+<div align="center">
+  <a href="https://github.com/morphicfilms/MorphicFrames2Video.git">
+    <img src="https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github" alt="GitHub">
+  </a>
+  <a href="https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames">
+    <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue" alt="Hugging Face">
+  </a>
+  <a href="https://www.morphic.com">
+    <img src="https://img.shields.io/badge/Website-morphic.com-purple" alt="Website">
+  </a>
+</div>
 
 </div>
+
 ## Showcase
 
 | Video | Input Images & Prompt |
