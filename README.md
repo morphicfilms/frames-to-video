@@ -24,8 +24,8 @@
 
 | Video | Input Images & Prompt |
 |-------|----------------------|
-| <video src="https://github.com/user-attachments/assets/49019528-f5fc-4344-84a5-302e856dd770" controls width="640"></video> | <img src="examples/transition9_1.png" width="200"> → <img src="examples/transition9_2.png" width="200"><br><br>**Prompt:** "A clown, slowly transforms into a poster."<br><br>**Type:** Two-frame transition |
-| <video src="https://github.com/user-attachments/assets/5d69f1c9-1cd6-4db7-9ab1-1a055e0a0804" controls width="640"></video> | <img src="examples/pink_1.png" width="150"> → <img src="examples/pink_2.png" width="150"> → <img src="examples/pink_3.png" width="150"> → <img src="examples/pink_4.png" width="150"><br><br>**Prompt:** "The animated girl rises up from her chair and waves hi to the camera as the camera zooms in."<br><br>**Type:** Multi-frame interpolation |
+| <video src="https://github.com/user-attachments/assets/5d69f1c9-1cd6-4db7-9ab1-1a055e0a0804" controls width="640"></video> | <img src="examples/transition9_1.png" width="200"> → <img src="examples/transition9_2.png" width="200"><br><br>**Prompt:** "A clown, slowly transforms into a poster."<br><br>**Type:** Two-frame transition |
+| <video src="https://github.com/user-attachments/assets/49019528-f5fc-4344-84a5-302e856dd770" controls width="640"></video> | <img src="examples/pink_1.png" width="150"> → <img src="examples/pink_2.png" width="150"> → <img src="examples/pink_3.png" width="150"> → <img src="examples/pink_4.png" width="150"><br><br>**Prompt:** "The animated girl rises up from her chair and waves hi to the camera as the camera zooms in."<br><br>**Type:** Multi-frame interpolation |
 ## Setting up the repository
 
 First clone the Morphic Interpolation repo:
