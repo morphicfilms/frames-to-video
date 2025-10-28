@@ -1,8 +1,16 @@
 # Wan2.2 based Transitions and Frames-2-video
 
+<div align="center">
 
-by [Morphic](https://www.morphic.com) | [![GitHub](https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github)](https://github.com/morphicfilms/MorphicFrames2Video.git) | Weights: [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue)](https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames)
+# 🎬 Morphic Frames to Video
 
+### High-quality video generation from image frames using Wan2.2
+
+[![GitHub](https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github)](https://github.com/morphicfilms/MorphicFrames2Video.git)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue)](https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames)
+[![Website](https://img.shields.io/badge/Website-morphic.com-purple)](https://www.morphic.com)
+
+</div>
 ## Showcase
 
 | Video | Input Images & Prompt |
@@ -16,7 +24,7 @@ by [Morphic](https://www.morphic.com) | [![GitHub](https://img.shields.io/badge/
 First clone the Morphic Interpolation repo:
 
 ```
-git clone https://github.com/morphicfilms/MorphicFrames2Video.git
+git clone https://github.com/morphicfilms/frames-to-video.git
 ```
 
 To install the environment, we recommend following the [Wan2.2 installation guide](https://github.com/Wan-Video/Wan2.2).
@@ -34,7 +42,7 @@ huggingface-cli download Wan-AI/Wan2.2-I2V-A14B --local-dir ./Wan2.2-I2V-A14B
 Second : download the Morphic Frames to Video lora weights :
 
 ```
-huggingface-cli download morphicmlteam/Wan2.2-I2V-A14B-frames --local-dir ./morphic-frames-lora-weights
+huggingface-cli download morphic/Wan2.2-frames-to-video --local-dir ./morphic-frames-lora-weights
 ```
 
 ## Running Frames to Video
