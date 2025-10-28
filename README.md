@@ -1,4 +1,3 @@
-# Wan2.2 based Transitions and Frames-to-video
 
 <div align="center">
 
