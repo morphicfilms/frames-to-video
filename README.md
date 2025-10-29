@@ -20,8 +20,6 @@
 
 ## Showcase
 
-## Showcase
-
 | Video | Input Images & Prompt |
 |-------|----------------------|
 | <video src="https://github.com/user-attachments/assets/5d69f1c9-1cd6-4db7-9ab1-1a055e0a0804" controls width="640"></video> | <img src="examples/transition9_1.png" width="200"> → <img src="examples/transition9_2.png" width="200"><br><br>**Prompt:** "A clown, slowly transforms into a poster."<br><br>**Type:** Two-frame transition |
