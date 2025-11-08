@@ -5,10 +5,10 @@
 ### High-quality video generation from image frames using Wan2.2
 
 <div align="center">
-  <a href="https://github.com/morphicfilms/MorphicFrames2Video.git">
-    <img src="https://img.shields.io/badge/GitHub-Morphic%20Frames-black?logo=github" alt="GitHub">
+  <a href="https://github.com/morphicfilms/frames-to-video.git">
+    <img src="https://img.shields.io/badge/Github-Morphic%20Frames-black?logo=github" alt="GitHub">
   </a>
-  <a href="https://huggingface.co/morphicmlteam/Wan2.2-I2V-A14B-frames">
+  <a href="https://huggingface.co/morphic/Wan2.2-frames-to-video">
     <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Morphic%20Frames-blue" alt="Hugging Face">
   </a>
   <a href="https://www.morphic.com">
